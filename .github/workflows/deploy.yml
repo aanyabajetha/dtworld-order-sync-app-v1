@@ -1,0 +1,102 @@
+name: Build and Deploy to CloudHub 2.0
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Cache Maven dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: 8
+
+      - name: Build Mule Application
+        run: mvn -B clean package --file pom.xml
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mule-app
+          path: target/*.jar
+
+  publish-to-exchange:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Cache Maven dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: mule-app
+
+      - name: Publish to Exchange
+        env:
+          connectedAppClientId: ${{ secrets.CONNECTED_APP_CLIENT_ID }}
+          connectedAppClientSecret: ${{ secrets.CONNECTED_APP_CLIENT_SECRET }}
+        run: |
+          mvn clean deploy -DskipTests \
+            -DconnectedAppClientId=$connectedAppClientId \
+            -DconnectedAppClientSecret=$connectedAppClientSecret
+
+  deploy:
+    needs: publish-to-exchange
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Cache Maven dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: mule-app
+
+      - name: Deploy to CloudHub 2.0
+        env:
+          connectedAppClientId: ${{ secrets.CONNECTED_APP_CLIENT_ID }}
+          connectedAppClientSecret: ${{ secrets.CONNECTED_APP_CLIENT_SECRET }}
+        run: |
+          mvn deploy -DmuleDeploy \
+            -DconnectedAppClientId=$connectedAppClientId \
+            -DconnectedAppClientSecret=$connectedAppClientSecret \
+            -Denvironment=Sandbox \
+            -Dcloudhub2.target=Cloudhub-US-East-2 \
+            -Dcloudhub2.applicationName=dtworld-order-sync-app-v1-sandbox \
+            -Dcloudhub2.vCores=1 \
+            -Dcloudhub2.replicas=1
+
