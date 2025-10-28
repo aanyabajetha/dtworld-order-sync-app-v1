@@ -11,7 +11,16 @@ http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/htt
 http://www.mulesoft.org/schema/mule/anypoint-mq http://www.mulesoft.org/schema/mule/anypoint-mq/current/mule-anypoint-mq.xsd">
 	
 	<sub-flow name="publish-to-mq-sub-flow" doc:id="d167ed45-2330-42f6-a43d-648ed1b8fc59" >
-	<logger level="INFO" doc:name="INFO : START" doc:id="7210b549-3659-4bef-adc1-e28cf58ba0a6" message='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;    appName: app.name,&#10;    flowName : flow.name,&#10;    position: "Flow Start",&#10;    message: "Publishing to MQ for alerts",&#10;    correlationId: correlationId&#10;}]'/>
+	<logger level="INFO" doc:name="INFO : START" doc:id="7210b549-3659-4bef-adc1-e28cf58ba0a6" message='#[%dw 2.0
+output application/json
+---
+{
+    appName: app.name,
+    flowName : flow.name,
+    position: "Flow Start",
+    message: "Publishing to MQ for alerts",
+    correlationId: correlationId
+}]'/>
 		<os:retrieve-all doc:name="All SF Job Ids" doc:id="2c3413dd-b13a-4849-9771-ff415c1714f7" objectStore="Object_store" />
 		<ee:transform doc:name="Mapping for MQ msg" doc:id="249a4ac8-8a0d-4f4e-91d7-cc2ffd46a945" >
 			<ee:message >
@@ -20,10 +29,28 @@ http://www.mulesoft.org/schema/mule/anypoint-mq http://www.mulesoft.org/schema/m
 		</ee:transform>
 		<anypoint-mq:publish doc:name="dtworld-alerting-queue" doc:id="d39bf966-f07f-4d96-9b53-31ea42edf686" config-ref="Anypoint_MQ_Config" destination="dtworld-alerting-queue"/>
 		<os:clear doc:name="Object_store" doc:id="ab576ef3-79f9-4005-b9e6-5eec275dd10e" objectStore="Object_store"/>
-		<logger level="INFO" doc:name="INFO : END" doc:id="a4afb2bd-c6b5-421a-9405-daf9ec6d3ec5" message='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;    appName: app.name,&#10;    flowName : flow.name,&#10;    position: "Flow End",&#10;    message: "Published to MQ",&#10;    correlationId: correlationId&#10;}]'/>
+		<logger level="INFO" doc:name="INFO : END" doc:id="a4afb2bd-c6b5-421a-9405-daf9ec6d3ec5" message='#[%dw 2.0
+output application/json
+---
+{
+    appName: app.name,
+    flowName : flow.name,
+    position: "Flow End",
+    message: "Published to MQ",
+    correlationId: correlationId
+}]'/>
 	</sub-flow>
 	<sub-flow name="record-retrieval-sub-flow" doc:id="faef833f-f2eb-47a8-87c5-5c04b793d12d" >
-		<logger level="INFO" doc:name="INFO : START" doc:id="9693267d-2c8a-4335-82da-0a4714ef838a" message='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;    appName: app.name,&#10;    flowName : flow.name,&#10;    position: "Flow Start",&#10;    message: "Retrieving success and failed records",&#10;    correlationId: correlationId&#10;}]'/>
+		<logger level="INFO" doc:name="INFO : START" doc:id="9693267d-2c8a-4335-82da-0a4714ef838a" message='#[%dw 2.0
+output application/json
+---
+{
+    appName: app.name,
+    flowName : flow.name,
+    position: "Flow Start",
+    message: "Retrieving success and failed records",
+    correlationId: correlationId
+}]'/>
 		<ee:transform doc:name="var : sfJobId" doc:id="3f09e1c5-cb96-4792-93df-71853f7457b7" >
 			<ee:message >
 			</ee:message>
@@ -68,11 +95,29 @@ else []]]></ee:set-variable>
 		</ee:transform>
 		<os:store doc:name="Created Job Id" doc:id="c0b3159b-504d-45d4-b116-4fe6103543d0" key="#[vars.sfJobId]" objectStore="Object_store"/>
 		
-		<logger level="INFO" doc:name="INFO : END" doc:id="7c855742-ce86-4c56-a007-c64caad9ae87" message='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;    appName: app.name,&#10;    flowName : flow.name,&#10;    position: "Flow End",&#10;    message: "Retrieval Successful",&#10;    correlationId: correlationId&#10;}]'/>
+		<logger level="INFO" doc:name="INFO : END" doc:id="7c855742-ce86-4c56-a007-c64caad9ae87" message='#[%dw 2.0
+output application/json
+---
+{
+    appName: app.name,
+    flowName : flow.name,
+    position: "Flow End",
+    message: "Retrieval Successful",
+    correlationId: correlationId
+}]'/>
 	</sub-flow>
 	<flow name="email-alert-flow" doc:id="b85bc51f-cbcc-4b74-ac24-54d28abe1421" >
 		<anypoint-mq:subscriber doc:name="dtworld-alerting-queue" doc:id="d088a57a-98b5-4362-8ed0-2728b43729f8" config-ref="Anypoint_MQ_Config" destination="dtworld-alerting-queue"/>
-		<logger level="INFO" doc:name="INFO : START" doc:id="03ed3184-faee-49bf-b628-a62597f5d911" message='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;    appName: app.name,&#10;    flowName : flow.name,&#10;    position: "Flow Start",&#10;    message: "Subscribing the MQ and sending alert notification",&#10;    correlationId: correlationId&#10;}]'/>
+		<logger level="INFO" doc:name="INFO : START" doc:id="03ed3184-faee-49bf-b628-a62597f5d911" message='#[%dw 2.0
+output application/json
+---
+{
+    appName: app.name,
+    flowName : flow.name,
+    position: "Flow Start",
+    message: "Subscribing the MQ and sending alert notification",
+    correlationId: correlationId
+}]'/>
 		<parse-template doc:name="Email Body" doc:id="88dd1e0e-28d3-4903-94e9-c28c43400650" location="html/htmlEncoded.html" target="emailBody" targetValue="#[payload]" />
 		<email:send doc:name="Summary Email" doc:id="00c05d6c-b39d-4c8f-a065-1c9bd5d2d20d" config-ref="Email_SMTP" toAddresses='#[["aanyabajetha04@gmail.com"]]' fromAddress="aanya.bajetha@caeliusconsulting.com" subject="#[&quot;DTWorld Order Processing Status &quot; ++ p('mule.env') ++ &quot; &quot; ++ now() as DateTime {format: &quot;dd-MM-yyyy'T'HH:mm:ss&quot;}]">
 			<email:body contentType="text/html" encoding="UTF-8">
@@ -85,7 +130,16 @@ output application/json
   "DTWorldOrderSync.csv": payload
 }]]]></email:attachments>
 		</email:send>
-		<logger level="INFO" doc:name="INFO : END" doc:id="44ac40ec-a0f6-452b-8854-226ca3e16700" message='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;    appName: app.name,&#10;    flowName : flow.name,&#10;    position: "Flow End",&#10;    message: "Alert Notification Sent",&#10;    correlationId: correlationId&#10;}]'/>
+		<logger level="INFO" doc:name="INFO : END" doc:id="44ac40ec-a0f6-452b-8854-226ca3e16700" message='#[%dw 2.0
+output application/json
+---
+{
+    appName: app.name,
+    flowName : flow.name,
+    position: "Flow End",
+    message: "Alert Notification Sent",
+    correlationId: correlationId
+}]'/>
 		<error-handler ref="global-error-handler" />
 	</flow>
 </mule>

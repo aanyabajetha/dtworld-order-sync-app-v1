@@ -18,7 +18,16 @@ http://www.mulesoft.org/schema/mule/sftp http://www.mulesoft.org/schema/mule/sft
 				<cron expression="0 0 */6 * * ?" timeZone="EST"/>
 			</scheduling-strategy>
 		</scheduler>
-		<logger level="INFO" doc:name="INFO : START" doc:id="3827e2a6-8dc5-4bf1-8b3b-fc5e9647160a" message='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;    appName: app.name,&#10;    flowName : flow.name,&#10;    position: "Flow Start",&#10;    message: "Syncing to Salesforce",&#10;    correlationId: correlationId&#10;}]'/>
+		<logger level="INFO" doc:name="INFO : START" doc:id="3827e2a6-8dc5-4bf1-8b3b-fc5e9647160a" message='#[%dw 2.0
+output application/json
+---
+{
+    appName: app.name,
+    flowName : flow.name,
+    position: "Flow Start",
+    message: "Syncing to Salesforce",
+    correlationId: correlationId
+}]'/>
 		<ee:transform doc:name="var : query" doc:id="9201515c-e2c9-489d-9d5a-fff27e6a48d4" >
 			<ee:message >
 			</ee:message>
@@ -72,7 +81,15 @@ output application/json
 							<flow-ref doc:name="get-sf-job-state-sub-flow" doc:id="1269c448-41b8-4184-928b-62a8ae615f6b" name="get-sf-job-state-sub-flow" />
 							<error-handler >
 								<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="2ecb7969-8da6-4269-ac84-b72c751f1326" >
-									<logger level="INFO" doc:name="ERROR : Job Creation Failed" doc:id="a9c8e1ad-aa34-451d-9252-50f4d119c643" message='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;    appName: app.name,&#10;    flowName : flow.name,&#10;    message: "Salesforce Job Creation Failed for Job Id : " ++ payload.id,&#10;    correlationId: correlationId&#10;}]'/>
+									<logger level="INFO" doc:name="ERROR : Job Creation Failed" doc:id="a9c8e1ad-aa34-451d-9252-50f4d119c643" message='#[%dw 2.0
+output application/json
+---
+{
+    appName: app.name,
+    flowName : flow.name,
+    message: "Salesforce Job Creation Failed for Job Id : " ++ payload.id,
+    correlationId: correlationId
+}]'/>
 								</on-error-continue>
 							</error-handler>
 						</try>
@@ -91,7 +108,16 @@ output application/json
 			</batch:process-records>
 			<batch:on-complete >
 				<flow-ref doc:name="publish-to-mq-sub-flow" doc:id="c963068c-5d7e-426c-98c5-d9e197742efe" name="publish-to-mq-sub-flow"/>
-				<logger level="INFO" doc:name="INFO : COMPLETE" doc:id="32e0890f-cc8c-4bae-bc1d-4ff1aac907a1" message='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;    appName: app.name,&#10;    flowName : flow.name,&#10;    position: "Batch Job End",&#10;    message: "Batch Job Completed",&#10;    correlationId: correlationId&#10;}]'/>
+				<logger level="INFO" doc:name="INFO : COMPLETE" doc:id="32e0890f-cc8c-4bae-bc1d-4ff1aac907a1" message='#[%dw 2.0
+output application/json
+---
+{
+    appName: app.name,
+    flowName : flow.name,
+    position: "Batch Job End",
+    message: "Batch Job Completed",
+    correlationId: correlationId
+}]'/>
 			</batch:on-complete>
 		</batch:job>
 		<ee:transform doc:name="var : query" doc:id="a6b920af-e756-498d-a666-5e56af3a71d9" >
@@ -128,12 +154,30 @@ output application/json
 			</ee:variables>
 		</ee:transform>
 		<flow-ref doc:name="common-http-request-sub-flow" doc:id="11f8e34e-901e-4d7a-8c3d-8e25337a1cc0" name="common-http-request-sub-flow"/>
-		<logger level="INFO" doc:name="INFO : END" doc:id="49992ce7-759a-4959-948f-d171e7ef9a39" message='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;    appName: app.name,&#10;    flowName : flow.name,&#10;    position: "Flow End",&#10;    message: "Salesforce Sync completed",&#10;    correlationId: correlationId&#10;}]'/>
+		<logger level="INFO" doc:name="INFO : END" doc:id="49992ce7-759a-4959-948f-d171e7ef9a39" message='#[%dw 2.0
+output application/json
+---
+{
+    appName: app.name,
+    flowName : flow.name,
+    position: "Flow End",
+    message: "Salesforce Sync completed",
+    correlationId: correlationId
+}]'/>
 		<error-handler ref="global-error-handler" />
 		
 	</flow>
 	<sub-flow name="get-sf-job-state-sub-flow" doc:id="d04d2f76-d0bb-4755-9704-b13f1be9bf9b" >
-		<logger level="INFO" doc:name="INFO : START" doc:id="e15bbb57-46d5-444f-8b44-c4d4eb505a30" message='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;    appName: app.name,&#10;    flowName : flow.name,&#10;    position: "Flow Start",&#10;    message: "Get Job status of SF sync",&#10;    correlationId: correlationId&#10;}]'/>
+		<logger level="INFO" doc:name="INFO : START" doc:id="e15bbb57-46d5-444f-8b44-c4d4eb505a30" message='#[%dw 2.0
+output application/json
+---
+{
+    appName: app.name,
+    flowName : flow.name,
+    position: "Flow Start",
+    message: "Get Job status of SF sync",
+    correlationId: correlationId
+}]'/>
 		<until-successful maxRetries="10" doc:name="Until Successful" doc:id="5f0fe5c1-e539-4fd0-8427-423ce7fef2fd" >
 			<salesforce:get-job-state-bulk-api-v2 doc:name="Get job state bulk api v 2" doc:id="cf32e662-bdf2-4e63-a671-a9b0ad94a3e7" config-ref="Salesforce_Config" id="#[payload.id]" />
 		</until-successful>
@@ -157,6 +201,15 @@ output application/json
 			</otherwise>
 		
 </choice>
-		<logger level="INFO" doc:name="INFO : END" doc:id="55150aa9-2b2e-46fe-ac32-a727f045c72e" message='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;    appName: app.name,&#10;    flowName : flow.name,&#10;    position: "Flow End",&#10;    message: "SF Job Complete - Status Retrieved",&#10;    correlationId: correlationId&#10;}]'/>
+		<logger level="INFO" doc:name="INFO : END" doc:id="55150aa9-2b2e-46fe-ac32-a727f045c72e" message='#[%dw 2.0
+output application/json
+---
+{
+    appName: app.name,
+    flowName : flow.name,
+    position: "Flow End",
+    message: "SF Job Complete - Status Retrieved",
+    correlationId: correlationId
+}]'/>
 	</sub-flow>
 </mule>

@@ -16,9 +16,27 @@ http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/htt
 				<cron expression="0 0 * * * ?" timeZone="EST"/>
 			</scheduling-strategy>
 		</scheduler>
-		<logger level="INFO" doc:name="INFO : START" doc:id="47bc026b-12ba-45dd-8a9d-ba924ba729c9" message='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;    appName: app.name,&#10;    flowName : flow.name,&#10;    position: "Flow Start",&#10;    message: "Starting Main Flow",&#10;    correlationId: correlationId&#10;}]'/>
+		<logger level="INFO" doc:name="INFO : START" doc:id="47bc026b-12ba-45dd-8a9d-ba924ba729c9" message='#[%dw 2.0
+output application/json
+---
+{
+    appName: app.name,
+    flowName : flow.name,
+    position: "Flow Start",
+    message: "Starting Main Flow",
+    correlationId: correlationId
+}]'/>
 		<sftp:list doc:name="Listing all the Files" doc:id="5f5b15c0-53e2-4520-af1d-0e2c6db74a0d" config-ref="SFTP_Config" directoryPath="/dtworld/orders"/>
-		<logger level="INFO" doc:name="INFO : Files to be Processed" doc:id="b161e414-a986-47de-9f13-8557a028710b" message='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;    appName: app.name,&#10;    flowName : flow.name,&#10;    position: "Flow Start",&#10;    message: "Number of files to be processed : " ++ sizeOf(payload.attributes.path),&#10;    correlationId: correlationId&#10;}]'/>
+		<logger level="INFO" doc:name="INFO : Files to be Processed" doc:id="b161e414-a986-47de-9f13-8557a028710b" message='#[%dw 2.0
+output application/json
+---
+{
+    appName: app.name,
+    flowName : flow.name,
+    position: "Flow Start",
+    message: "Number of files to be processed : " ++ sizeOf(payload.attributes.path),
+    correlationId: correlationId
+}]'/>
 		<foreach doc:name="For Each" doc:id="ff75237a-87d0-48dd-9b92-0309aa186417" collection="#[payload.attributes.path default []]">
 			<try doc:name="Try" doc:id="05e0c1a6-3176-4227-9119-18382e97ba58" >
 				<set-variable value="#[payload]" doc:name="var : filePath" doc:id="61138d8f-4369-4db1-a113-e85e4dae1daa" variableName="filePath" />
@@ -62,7 +80,16 @@ output application/json
 				<sftp:move doc:name="/dtworld/processed" doc:id="50ce14aa-0014-4b8f-bde8-fe65b1f6a290" config-ref="SFTP_Config" sourcePath="#[vars.filePath]" targetPath="/dtworld/processed" renameTo="#[&quot;Processed File&quot; ++ now() as DateTime {format:&quot;dd-MM-yyyy'T'HH:mm:ss&quot;} ++ &quot;.csv&quot;]" />
 				<error-handler >
 					<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="98b829ae-2985-4836-96f0-3b4bbee7e8dd" >
-						<logger level="ERROR" doc:name="ERROR : Can't Process File" doc:id="6b83584a-c07c-43ad-8e52-4a0fdec339ed" message='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;    appName: app.name,&#10;    flowName : flow.name,&#10;    position: "Flow Start",&#10;    message: "Error processing file : " ++ error.description,&#10;    correlationId: correlationId&#10;}]' />
+						<logger level="ERROR" doc:name="ERROR : Can't Process File" doc:id="6b83584a-c07c-43ad-8e52-4a0fdec339ed" message='#[%dw 2.0
+output application/json
+---
+{
+    appName: app.name,
+    flowName : flow.name,
+    position: "Flow Start",
+    message: "Error processing file : " ++ error.description,
+    correlationId: correlationId
+}]' />
 						<sftp:move doc:name="/dtworld/failed" doc:id="fb297efa-77c9-4912-9274-89e4aa1493df" config-ref="SFTP_Config" sourcePath="#[vars.filePath]" targetPath="/dtworld/failed" renameTo="#[&quot;Failed File&quot; ++ now() as DateTime {format:&quot;dd-MM-yyyy'T'HH:mm:ss&quot;} ++ &quot;.csv&quot;]"/>
 					</on-error-continue>
 				</error-handler>
