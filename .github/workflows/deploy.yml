@@ -2,9 +2,9 @@ name: Build and Deploy to Sandbox
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
   pull_request:
-    branches: [ main ]
+    branches: [ master ]
     
 jobs:
   build:
@@ -76,7 +76,7 @@ jobs:
   deploy:
     needs: publish-to-exchange
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     steps:    
     - name: Checkout this repo
       uses: actions/checkout@v4
@@ -117,6 +117,6 @@ jobs:
          -Danypoint.clientSecret="$ANYPOINT_CLIENT_SECRET" \
          -Dcloudhub2.environment="Sandbox" \
          -Dcloudhub2.target="Cloudhub-US-East-2" \
-         -Dcloudhub2.applicationName="ci-cd-pipeline-demo" \
+         -Dcloudhub2.applicationName="dtworld-order-sync-app-v1-sandbox" \
          -Dcloudhub2.vCores="0.1" \
          -Dcloudhub2.replicas="1"
