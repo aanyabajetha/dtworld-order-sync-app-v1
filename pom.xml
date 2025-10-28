@@ -5,11 +5,11 @@
 	<modelVersion>4.0.0</modelVersion>
 <!-- GAV coordinates  -->
 	<groupId>72430887-4d0c-4d3e-95ea-eaf56daaaae2</groupId>
-	<artifactId>dtworld-order-sync-app-v1</artifactId>
+	<artifactId>dtworld-order-sync-app-v2</artifactId>
 	<version>1.0.0-SNAPSHOT</version>
 	<packaging>mule-application</packaging>
 <!-- name of mule application -->
-	<name>dtworld-order-sync-app-v1</name>
+	<name>dtworld-order-sync-app-v2</name>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
