@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:anypoint-mq="http://www.mulesoft.org/schema/mule/anypoint-mq" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:os="http://www.mulesoft.org/schema/mule/os"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:email="http://www.mulesoft.org/schema/mule/email" xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/anypoint-mq http://www.mulesoft.org/schema/mule/anypoint-mq/current/mule-anypoint-mq.xsd">
+	
+	<sub-flow name="publish-to-mq-sub-flow" doc:id="d167ed45-2330-42f6-a43d-648ed1b8fc59" >
+	<logger level="INFO" doc:name="INFO : START" doc:id="7210b549-3659-4bef-adc1-e28cf58ba0a6" message='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;    appName: app.name,&#10;    flowName : flow.name,&#10;    position: "Flow Start",&#10;    message: "Publishing to MQ for alerts",&#10;    correlationId: correlationId&#10;}]'/>
+		<os:retrieve-all doc:name="All SF Job Ids" doc:id="2c3413dd-b13a-4849-9771-ff415c1714f7" objectStore="Object_store" />
+		<ee:transform doc:name="Mapping for MQ msg" doc:id="249a4ac8-8a0d-4f4e-91d7-cc2ffd46a945" >
+			<ee:message >
+				<ee:set-payload resource="dwl/flatten-csv.dwl"/>
+			</ee:message>
+		</ee:transform>
+		<anypoint-mq:publish doc:name="dtworld-alerting-queue" doc:id="d39bf966-f07f-4d96-9b53-31ea42edf686" config-ref="Anypoint_MQ_Config" destination="dtworld-alerting-queue"/>
+		<os:clear doc:name="Object_store" doc:id="ab576ef3-79f9-4005-b9e6-5eec275dd10e" objectStore="Object_store"/>
+		<logger level="INFO" doc:name="INFO : END" doc:id="a4afb2bd-c6b5-421a-9405-daf9ec6d3ec5" message='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;    appName: app.name,&#10;    flowName : flow.name,&#10;    position: "Flow End",&#10;    message: "Published to MQ",&#10;    correlationId: correlationId&#10;}]'/>
+	</sub-flow>
+	<sub-flow name="record-retrieval-sub-flow" doc:id="faef833f-f2eb-47a8-87c5-5c04b793d12d" >
+		<logger level="INFO" doc:name="INFO : START" doc:id="9693267d-2c8a-4335-82da-0a4714ef838a" message='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;    appName: app.name,&#10;    flowName : flow.name,&#10;    position: "Flow Start",&#10;    message: "Retrieving success and failed records",&#10;    correlationId: correlationId&#10;}]'/>
+		<ee:transform doc:name="var : sfJobId" doc:id="3f09e1c5-cb96-4792-93df-71853f7457b7" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="sfJobId" ><![CDATA[payload.id]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<until-successful maxRetries="10" doc:name="Until Successful" doc:id="7af712ca-c75b-4d37-94e9-85a7eba19d84" >
+			<salesforce:retrieve-job-successful-results-bulk-v2 doc:name="Retrieve job successful results bulk v 2" doc:id="aac766ce-fc7a-4ad6-9053-9687d19f218c" config-ref="Salesforce_Config" id="#[vars.sfJobId]" />
+		</until-successful>
+		<ee:transform doc:name="Attachment Mapping" doc:id="99a41d77-d644-4861-93b4-1006a882e1a6" >
+			<ee:message >
+				<ee:set-payload resource="dwl/attachment-mapping.dwl"/>
+			</ee:message>
+		</ee:transform>
+		<until-successful maxRetries="10" doc:name="Until Successful" doc:id="f5cb3983-0a61-4432-aaa2-86da9d90ce15" >
+			<salesforce:retrieve-job-failed-results-bulk-v2 doc:name="Retrieve job failed results bulk v 2" doc:id="5ccad77b-730d-49c0-b668-b2de768c6430" config-ref="Salesforce_Config" target="failedRec" id="#[vars.sfJobId]" />
+		</until-successful>
+		<ee:transform doc:name="Failed Attachment Mapping" doc:id="2b441573-1254-4608-8644-a53398d4078d" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="failedRec" ><![CDATA[%dw 2.0
+output application/json
+---
+if(!isEmpty(vars.failedRec))
+vars.failedRec.originalFields map ((item, index) -> {
+    order_id: item.Order_ID__c,
+    customer_id: item.Customer_ID__c,
+    order_status: item.Order_Status__c,
+    order_date: item.Order_Date__c,
+    cancellation_date: item.Cancellation_Time__c,
+    sf_sync_status: "Failed"
+})
+else []]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<ee:transform doc:name="Combined Mapping - CSV attachment" doc:id="b445ae59-bb41-4a08-b9d4-76dc7ebc96e9" >
+			<ee:message >
+				<ee:set-payload resource="dwl/combined-mapping.dwl"/>
+			</ee:message>
+		</ee:transform>
+		<os:store doc:name="Created Job Id" doc:id="c0b3159b-504d-45d4-b116-4fe6103543d0" key="#[vars.sfJobId]" objectStore="Object_store"/>
+		
+		<logger level="INFO" doc:name="INFO : END" doc:id="7c855742-ce86-4c56-a007-c64caad9ae87" message='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;    appName: app.name,&#10;    flowName : flow.name,&#10;    position: "Flow End",&#10;    message: "Retrieval Successful",&#10;    correlationId: correlationId&#10;}]'/>
+	</sub-flow>
+	<flow name="email-alert-flow" doc:id="b85bc51f-cbcc-4b74-ac24-54d28abe1421" >
+		<anypoint-mq:subscriber doc:name="dtworld-alerting-queue" doc:id="d088a57a-98b5-4362-8ed0-2728b43729f8" config-ref="Anypoint_MQ_Config" destination="dtworld-alerting-queue"/>
+		<logger level="INFO" doc:name="INFO : START" doc:id="03ed3184-faee-49bf-b628-a62597f5d911" message='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;    appName: app.name,&#10;    flowName : flow.name,&#10;    position: "Flow Start",&#10;    message: "Subscribing the MQ and sending alert notification",&#10;    correlationId: correlationId&#10;}]'/>
+		<parse-template doc:name="Email Body" doc:id="88dd1e0e-28d3-4903-94e9-c28c43400650" location="html/htmlEncoded.html" target="emailBody" targetValue="#[payload]" />
+		<email:send doc:name="Summary Email" doc:id="00c05d6c-b39d-4c8f-a065-1c9bd5d2d20d" config-ref="Email_SMTP" toAddresses='#[["aanyabajetha04@gmail.com"]]' fromAddress="aanya.bajetha@caeliusconsulting.com" subject="#[&quot;DTWorld Order Processing Status &quot; ++ p('mule.env') ++ &quot; &quot; ++ now() as DateTime {format: &quot;dd-MM-yyyy'T'HH:mm:ss&quot;}]">
+			<email:body contentType="text/html" encoding="UTF-8">
+				<email:content><![CDATA[#[vars.emailBody]]]></email:content>
+			</email:body>
+			<email:attachments><![CDATA[#[%dw 2.0
+output application/json
+---
+{
+  "DTWorldOrderSync.csv": payload
+}]]]></email:attachments>
+		</email:send>
+		<logger level="INFO" doc:name="INFO : END" doc:id="44ac40ec-a0f6-452b-8854-226ca3e16700" message='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;    appName: app.name,&#10;    flowName : flow.name,&#10;    position: "Flow End",&#10;    message: "Alert Notification Sent",&#10;    correlationId: correlationId&#10;}]'/>
+		<error-handler ref="global-error-handler" />
+	</flow>
+</mule>

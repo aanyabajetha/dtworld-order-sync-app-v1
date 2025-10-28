@@ -1,0 +1,22 @@
+#SFTP Configuration
+sftp:
+  username: 
+  password: 
+  
+#Email Configuration
+email:
+  user: 
+  password: 
+  
+#Anypoint MQ Configuration
+mq:
+  clientId:
+  clientSecret: 
+ 
+#Salesforce Configuration 
+sf:
+  consumerKey:
+  consumerSecret: 
+  username: 
+  password: 
+  securityToken: 

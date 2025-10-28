@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties"
+	xmlns:os="http://www.mulesoft.org/schema/mule/os"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:anypoint-mq="http://www.mulesoft.org/schema/mule/anypoint-mq"
+	xmlns:email="http://www.mulesoft.org/schema/mule/email" xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:sftp="http://www.mulesoft.org/schema/mule/sftp" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd 
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd 
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd 
+http://www.mulesoft.org/schema/mule/sftp http://www.mulesoft.org/schema/mule/sftp/current/mule-sftp.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/anypoint-mq http://www.mulesoft.org/schema/mule/anypoint-mq/current/mule-anypoint-mq.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd">
+	<sftp:config name="SFTP_Config" doc:name="SFTP Config" doc:id="f7a3a339-2b8b-49a7-bc93-eba56d282e1b" >
+<sftp:connection host="${sftp.host}" username="${secure::sftp.username}" password="${secure::sftp.password}" port="${sftp.port}"/>
+</sftp:config>
+	<email:smtp-config name="Email_SMTP" doc:name="Email SMTP" doc:id="5796e976-7e6d-4874-ae3d-b263227ae42a" >
+		<email:smtp-connection host="${email.host}" port="${email.port}" user="${secure::email.user}" password="${secure::email.password}" connectionTimeout="10" readTimeout="10" writeTimeout="10">
+			<email:properties >
+				<email:property key="mail.smtp.starttls.enable" value="true" />
+			</email:properties>
+		</email:smtp-connection>
+	</email:smtp-config>
+	<anypoint-mq:config name="Anypoint_MQ_Config" doc:name="Anypoint MQ Config" doc:id="fa8aabac-1014-4f90-b248-7c1b569d49ce" >
+		<anypoint-mq:connection url="${mq.url}" clientId="${secure::mq.clientId}" clientSecret="${secure::mq.clientSecret}" />
+	</anypoint-mq:config>
+	<os:object-store name="Object_store" doc:name="Object store" doc:id="d2eb0fa7-80be-4e48-9ab7-7b5594a16c64" maxEntries="${os.maxEntries}" entryTtl="${os.entryTtl}" entryTtlUnit="HOURS" expirationInterval="${os.expirationInterval}" expirationIntervalUnit="HOURS"/>
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="4aa20c02-9d76-42ef-a7a2-e0ac514f3ab4" responseTimeout="60000">
+		<http:request-connection host="${http.host}" port="${http.port}" connectionIdleTimeout="60000"/>
+	</http:request-config>
+	<configuration-properties doc:name="Configuration properties" doc:id="b8f4c27c-f190-4a8a-abe1-fc1a74d2152c" file="properties\common\config-common.yaml" />
+	<configuration-properties doc:name="Configuration properties" doc:id="46915efe-e1ed-4c4d-a117-d647fbad19c0" file="properties\config-${mule.env}.yaml" />
+	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="442ad896-8561-4f30-a950-ae3536f91e12" file="properties\secure\config-${mule.env}-secure.yaml" key="${mule.key}" />
+	
+	<salesforce:sfdc-config name="Salesforce_Config" doc:name="Salesforce Config" doc:id="8e7332bf-278c-4cf6-88db-e67c86dfe436" >
+		<salesforce:oauth-user-pass-connection consumerKey="${secure::sf.consumerKey}" consumerSecret="${secure::sf.consumerSecret}" username="${secure::sf.username}" password="${secure::sf.password}" securityToken="${secure::sf.securityToken}" />
+	</salesforce:sfdc-config>
+</mule>

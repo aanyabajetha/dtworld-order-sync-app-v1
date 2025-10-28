@@ -1,0 +1,130 @@
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Record Processing Report</title>
+  <style>
+    body {
+      background: linear-gradient(135deg, #f0f4f8 0%, #e9eef5 100%);
+      font-family: 'Segoe UI', Arial, sans-serif;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 700px;
+      margin: 50px auto;
+      padding: 20px;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.12);
+    }
+
+    .header {
+      background: linear-gradient(120deg, #1976d2, #43a047);
+      color: #ffffff;
+      padding: 28px 36px;
+      font-size: 1.9em;
+      font-weight: 600;
+      letter-spacing: 0.8px;
+      text-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    }
+
+    .summary {
+      padding: 28px 36px 10px 36px;
+      font-size: 1.05em;
+      line-height: 1.75;
+      color: #444;
+    }
+
+    ul {
+      margin: 14px 0 0 25px;
+      padding-left: 0;
+      list-style: disc;
+    }
+
+    li {
+      margin: 6px 0;
+    }
+
+    .note {
+      padding: 10px 36px 0 36px;
+      font-size: 1.07em;
+      line-height: 1.6;
+      color: #333;
+    }
+
+    .footer {
+      background: #f8f9fb;
+      border-top: 1px solid #e0e4ea;
+      padding: 20px 36px;
+      font-size: 0.97em;
+      color: #555;
+      border-radius: 0 0 16px 16px;
+    }
+
+    .footer strong {
+      color: #1976d2;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 10px;
+      }
+
+      .card {
+        border-radius: 10px;
+      }
+
+      .header {
+        font-size: 1.5em;
+        padding: 20px;
+        text-align: center;
+      }
+
+      .summary, .note, .footer {
+        padding: 18px;
+        font-size: 1em;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <div class="header">📋 Record Processing Report</div>
+
+      <div class="summary">
+        Dear <strong>DTWorld Team</strong>,<br><br>
+        We are pleased to inform you that your recent data submission has been successfully processed. Below is a brief summary of the evaluation:
+        <ul>
+          <li>All records have been validated for completeness and data quality.</li>
+          <li>Accepted entries have been securely uploaded to our system.</li>
+          <li>Entries requiring manual review or additional input are flagged for your attention.</li>
+        </ul>
+      </div>
+
+      <div class="note">
+        Please find attached a detailed <strong>CSV report</strong> listing all processed records for your reference.
+      </div>
+
+      <div class="footer">
+        Best regards,<br>
+        <strong>Data Operations Team</strong><br>
+        Caelius Consulting
+      </div>
+    </div>
+  </div>
+</body>
+</html>

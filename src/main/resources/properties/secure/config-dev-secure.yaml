@@ -1,0 +1,22 @@
+#SFTP Configuration
+sftp:
+  username: "![xyBf+y9bAgpjnzFY/H36zB06Mht0XyM0tGYCagH8P58M2ONdqkUOogiv8RjJJX1h]"
+  password: "![M2U/T/2BHrcJcabw28MWOgK620oAIMmy7+iMVHojnp1gAx4K8DIxWb7ihFAHKSSA]"
+  
+#Email SMTP Configuration
+email:
+  user: "![SHFWNdGGWgsYoUZN6IC/X/K74p47C1K37KvXSYSvJQmrcpD9xO+S7ZF/09w6MQvv]"
+  password: "![9Li93HmjsNFsk2BbVpdl+heogO7b8QvZT+wtObchy5o=]"
+  
+#Anypoint MQ Configuration
+mq:
+  clientId: "![Jz9G5V/5nTMK4jybprVsTuQgJ9DVbP3uqB1jULSnD+YUYmmwxjzaxam4D9vP5iym]"
+  clientSecret: "![4a7CkKca2a/7++z66wl21DANrT/ezy8Fo7ZVMniJK1osDBlL/Xs2P1caXe9f4lZ5]"
+  
+#Salesforce Configuration
+sf:
+  consumerKey: "![DpViT9bNRKMYGY2r0Ffnq7GMH9yzRtqbenq2MWmi+r7SzfIPx0+phzWjcilF7zuLyjg4/3XsFuAHSA64tP+jA19Z/yQ+gFgsnpy6bS221P3mK/7nleTgoiGnVgABbUnW]"
+  consumerSecret: "![/qT8pL9EsUIYDpiZK9sQZ/OCLKqj+OyEs8TK/mksz25ZmfhHHIiZi8VL/XB+ecCfGjGXgScUv07oRan+/UrkM5uBfYW4IjO+uxHKRSb5l3w=]"
+  username: "![IeucZPIYHICRd4bddSmrzLx0mrDaagBtFLQ2m7Wz/zw=]"
+  password: "![kOPKtaMIWuyK6vRjnv7QMw==]"
+  securityToken: "![sk+teE/OE9DC1RiSnqA6rrz6TBudbsnbDjanp3J41D8=]"

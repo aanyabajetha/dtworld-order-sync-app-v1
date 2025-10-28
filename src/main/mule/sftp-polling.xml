@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+xmlns:batch="http://www.mulesoft.org/schema/mule/batch"
+xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:sftp="http://www.mulesoft.org/schema/mule/sftp" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/sftp http://www.mulesoft.org/schema/mule/sftp/current/mule-sftp.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	
+	<flow name="sftp-file-poll-flow" doc:id="99c848b1-4a6a-4a6c-a0a3-d6a3d04345ae" >
+<scheduler doc:name="0 0 * * * ?" doc:id="9794483b-a244-476d-b372-7251fd3d33e6" >
+			<scheduling-strategy >
+				<cron expression="0 0 * * * ?" timeZone="EST"/>
+			</scheduling-strategy>
+		</scheduler>
+		<logger level="INFO" doc:name="INFO : START" doc:id="47bc026b-12ba-45dd-8a9d-ba924ba729c9" message='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;    appName: app.name,&#10;    flowName : flow.name,&#10;    position: "Flow Start",&#10;    message: "Starting Main Flow",&#10;    correlationId: correlationId&#10;}]'/>
+		<sftp:list doc:name="Listing all the Files" doc:id="5f5b15c0-53e2-4520-af1d-0e2c6db74a0d" config-ref="SFTP_Config" directoryPath="/dtworld/orders"/>
+		<logger level="INFO" doc:name="INFO : Files to be Processed" doc:id="b161e414-a986-47de-9f13-8557a028710b" message='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;    appName: app.name,&#10;    flowName : flow.name,&#10;    position: "Flow Start",&#10;    message: "Number of files to be processed : " ++ sizeOf(payload.attributes.path),&#10;    correlationId: correlationId&#10;}]'/>
+		<foreach doc:name="For Each" doc:id="ff75237a-87d0-48dd-9b92-0309aa186417" collection="#[payload.attributes.path default []]">
+			<try doc:name="Try" doc:id="05e0c1a6-3176-4227-9119-18382e97ba58" >
+				<set-variable value="#[payload]" doc:name="var : filePath" doc:id="61138d8f-4369-4db1-a113-e85e4dae1daa" variableName="filePath" />
+				<sftp:read doc:name="Read Each File" doc:id="c04346d6-9866-491d-aab5-ed3a1d4c9565" config-ref="SFTP_Config" path="#[payload]" />
+				<ee:transform doc:name="CSV to JSON">
+  <ee:message>
+    <ee:set-payload resource="dwl/csv-json.dwl" />
+  </ee:message>
+</ee:transform>
+				<ee:transform doc:name="Duplicates Removal">
+  <ee:message>
+    <ee:set-payload resource="dwl/duplicate-removal.dwl" />
+  </ee:message>
+</ee:transform>
+				<ee:transform doc:name="CDM &amp; var : query" doc:id="3cd982bc-5b36-43e0-b4ba-d5b2c4f64cc2">
+			<ee:message>
+				<ee:set-payload resource="dwl/cdm-insert.dwl" />
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="query"><![CDATA["INSERT INTO staging_table (
+      order_id, customer_id, customer_name, order_date, order_status, cancellation_time
+    ) VALUES (
+      :order_id, :customer_id, :customer_name, :order_date, :order_status, :cancellation_time
+    )"]]></ee:set-variable>
+						<ee:set-variable variableName="httpOperation" ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"method": "POST",
+	"url": "https://dtworld-db-sapi-v1-birthh.ivasci.usa-e1.cloudhub.io/api/orders",
+	"headers": {
+		"x-client-id": "b64195fba610481e94e2f6055c1ddda5",
+		"x-client-secret": "18De38D318aa43B78581be3e3ac279EF"		
+	}
+	
+	
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+				<flow-ref doc:name="common-http-request-sub-flow" doc:id="1614a738-d0c3-488e-b68c-44d8d10469bd" name="common-http-request-sub-flow"/>
+				<sftp:move doc:name="/dtworld/processed" doc:id="50ce14aa-0014-4b8f-bde8-fe65b1f6a290" config-ref="SFTP_Config" sourcePath="#[vars.filePath]" targetPath="/dtworld/processed" renameTo="#[&quot;Processed File&quot; ++ now() as DateTime {format:&quot;dd-MM-yyyy'T'HH:mm:ss&quot;} ++ &quot;.csv&quot;]" />
+				<error-handler >
+					<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="98b829ae-2985-4836-96f0-3b4bbee7e8dd" >
+						<logger level="ERROR" doc:name="ERROR : Can't Process File" doc:id="6b83584a-c07c-43ad-8e52-4a0fdec339ed" message='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;    appName: app.name,&#10;    flowName : flow.name,&#10;    position: "Flow Start",&#10;    message: "Error processing file : " ++ error.description,&#10;    correlationId: correlationId&#10;}]' />
+						<sftp:move doc:name="/dtworld/failed" doc:id="fb297efa-77c9-4912-9274-89e4aa1493df" config-ref="SFTP_Config" sourcePath="#[vars.filePath]" targetPath="/dtworld/failed" renameTo="#[&quot;Failed File&quot; ++ now() as DateTime {format:&quot;dd-MM-yyyy'T'HH:mm:ss&quot;} ++ &quot;.csv&quot;]"/>
+					</on-error-continue>
+				</error-handler>
+			</try>
+		</foreach>
+<logger level="INFO" doc:name="INFO : END" doc:id="885cd292-b1b8-4932-b7d5-fcfb021a44fc" message='#[%dw 2.0
+output application/json
+---
+{
+    appName: app.name,
+    flowName : flow.name,
+    position: "Flow End",
+    message: "Staging Table Updated",
+    correlationId: correlationId
+}]'/>
+		<error-handler ref="global-error-handler" />
+		
+
+</flow>
+</mule>

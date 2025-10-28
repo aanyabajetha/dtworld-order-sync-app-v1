@@ -1,0 +1,3 @@
+#Anypoint MQ Configuration
+mq:
+  url: "https://mq-us-east-1.anypoint.mulesoft.com/api/v1/organizations/ce235d46-115c-497c-b0e2-474afd80f5e9/environments/f4097644-dc15-44ab-a801-1a4e7c898400"

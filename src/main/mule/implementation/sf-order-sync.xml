@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:sftp="http://www.mulesoft.org/schema/mule/sftp" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:os="http://www.mulesoft.org/schema/mule/os"
+	xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:batch="http://www.mulesoft.org/schema/mule/batch" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/sftp http://www.mulesoft.org/schema/mule/sftp/current/mule-sftp.xsd">
+	
+	
+	<flow name="sf-order-sync-flow" doc:id="754d56ba-dd34-40ba-a372-4a302842c451" >
+		<scheduler doc:name="0 0 */6 * * ?" doc:id="9c649438-48a4-49c3-a8d8-988818597f6e" >
+			<scheduling-strategy >
+				<cron expression="0 0 */6 * * ?" timeZone="EST"/>
+			</scheduling-strategy>
+		</scheduler>
+		<logger level="INFO" doc:name="INFO : START" doc:id="3827e2a6-8dc5-4bf1-8b3b-fc5e9647160a" message='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;    appName: app.name,&#10;    flowName : flow.name,&#10;    position: "Flow Start",&#10;    message: "Syncing to Salesforce",&#10;    correlationId: correlationId&#10;}]'/>
+		<ee:transform doc:name="var : query" doc:id="9201515c-e2c9-489d-9d5a-fff27e6a48d4" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="query" ><![CDATA[%dw 2.0
+import encodeURIComponent from dw::core::URL
+output application/java
+var filters = {
+  statusCanceled: "CANCELED",
+  statusNew: "NEW",
+  excludeNewOrderExists: true,
+  minHoursOld: 6
+}
+---
+encodeURIComponent(write(filters, "application/json"))
+]]></ee:set-variable>
+				<ee:set-variable variableName="httpOperation" ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"method": "GET",
+	"url": "https://dtworld-db-sapi-v1-birthh.ivasci.usa-e1.cloudhub.io/api/orders",
+	"headers": {
+		"x-client-id": "b64195fba610481e94e2f6055c1ddda5",
+		"x-client-secret": "18De38D318aa43B78581be3e3ac279EF"		
+	}
+	
+}]]></ee:set-variable>
+			
+</ee:variables>
+		</ee:transform>
+		<flow-ref doc:name="common-http-request-sub-flow" doc:id="41def5a8-ca4b-49ad-a16c-53b9477cbefb" name="common-http-request-sub-flow"/>
+		<batch:job jobName="sf-order-sync-batch-job" doc:id="c2937e8f-8e10-4c53-9dc1-0f51befbf5f9" maxFailedRecords="-1" target="batchResult" blockSize="10000">
+			<batch:process-records >
+				<batch:step name="cdm-sf-sync" doc:id="4ba99ed6-5357-4784-b294-ceb1e299944a" acceptPolicy="ALL">
+					<ee:transform doc:name="CDM" doc:id="2510b7e6-b3a5-46e8-af2c-29f5bd8efe30">
+						<ee:message>
+							<ee:set-payload resource="dwl/cdm-sf-batch.dwl"/>
+						</ee:message>
+					</ee:transform>
+					<batch:aggregator doc:name="sf-aggregate-records" doc:id="84996cf6-c5e9-4abf-a8a2-7ac748b9bb7d" size="10000" preserveMimeTypes="true">
+						<ee:transform doc:name="JSON mapping" doc:id="b56d852a-717c-4805-a7db-70f88e4742f3" >
+							<ee:message >
+								<ee:set-payload resource="dwl/csv-json.dwl"/>
+							</ee:message>
+						</ee:transform>
+						<until-successful maxRetries="10" doc:name="Until Successful" doc:id="69edc3b6-5e12-476c-8060-8d9d62f993f0" >
+							<salesforce:create-job-bulk-api-v2 doc:name="Create job bulk api v 2" doc:id="6820bbd0-1937-4e04-a73a-41887a44e7ec" config-ref="Salesforce_Config" objectType="Orders_Staging__c" operation="upsert" externalIdFieldName="Order_ID__c" lineEnding="CRLF"/>
+						</until-successful>
+						<try doc:name="Try" doc:id="fc789565-706b-44e7-b3e1-e21c213c5bc1" >
+							<flow-ref doc:name="get-sf-job-state-sub-flow" doc:id="1269c448-41b8-4184-928b-62a8ae615f6b" name="get-sf-job-state-sub-flow" />
+							<error-handler >
+								<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="2ecb7969-8da6-4269-ac84-b72c751f1326" >
+									<logger level="INFO" doc:name="ERROR : Job Creation Failed" doc:id="a9c8e1ad-aa34-451d-9252-50f4d119c643" message='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;    appName: app.name,&#10;    flowName : flow.name,&#10;    message: "Salesforce Job Creation Failed for Job Id : " ++ payload.id,&#10;    correlationId: correlationId&#10;}]'/>
+								</on-error-continue>
+							</error-handler>
+						</try>
+					</batch:aggregator>
+				</batch:step>
+				<batch:step name="handle-failures" doc:id="ce7f5b34-b03b-46a3-bd9c-989cf82c6194" acceptPolicy="ONLY_FAILURES">
+					<ee:transform doc:name="CDM" doc:id="5abd0573-fa67-4444-9bd2-e97dc00d7bbc">
+						<ee:message>
+							<ee:set-payload resource="dwl/cdm-sf-batch.dwl"/>
+						</ee:message>
+					</ee:transform>
+					<batch:aggregator doc:name="aggregate-write" doc:id="8cf386bb-8b40-415c-8f96-f5ab3539ecf8" size="10000" preserveMimeTypes="true">
+						<sftp:write doc:name="/dtworld/failed" doc:id="352b3026-7183-4431-bd42-b12509cc1604" config-ref="SFTP_Config" path="#[&quot;/dtworld/failed/batchFailedRecords&quot; ++ now() as DateTime {format:&quot;dd-MM-yyyy'T'HH:mm:ss&quot;} ++ &quot;.csv&quot;]"/>
+					</batch:aggregator>
+				</batch:step>
+			</batch:process-records>
+			<batch:on-complete >
+				<flow-ref doc:name="publish-to-mq-sub-flow" doc:id="c963068c-5d7e-426c-98c5-d9e197742efe" name="publish-to-mq-sub-flow"/>
+				<logger level="INFO" doc:name="INFO : COMPLETE" doc:id="32e0890f-cc8c-4bae-bc1d-4ff1aac907a1" message='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;    appName: app.name,&#10;    flowName : flow.name,&#10;    position: "Batch Job End",&#10;    message: "Batch Job Completed",&#10;    correlationId: correlationId&#10;}]'/>
+			</batch:on-complete>
+		</batch:job>
+		<ee:transform doc:name="var : query" doc:id="a6b920af-e756-498d-a666-5e56af3a71d9" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="query" ><![CDATA["DELETE s
+FROM staging_table s
+JOIN (
+  SELECT order_id, cnt FROM (
+    SELECT order_id, COUNT(*) AS cnt
+    FROM staging_table
+    GROUP BY order_id
+  ) AS counts
+) AS t ON s.order_id = t.order_id
+WHERE NOT (
+  s.order_status = 'new'
+  AND t.cnt = 1
+  AND s.order_date >= NOW() - INTERVAL 6 HOUR
+);
+"]]></ee:set-variable>
+				<ee:set-variable variableName="httpOperation" ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"method": "DELETE",
+	"url": "https://dtworld-db-sapi-v1-birthh.ivasci.usa-e1.cloudhub.io/api/orders",
+	"headers": {
+		"x-client-id": "b64195fba610481e94e2f6055c1ddda5",
+		"x-client-secret": "18De38D318aa43B78581be3e3ac279EF"		
+	}
+	
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<flow-ref doc:name="common-http-request-sub-flow" doc:id="11f8e34e-901e-4d7a-8c3d-8e25337a1cc0" name="common-http-request-sub-flow"/>
+		<logger level="INFO" doc:name="INFO : END" doc:id="49992ce7-759a-4959-948f-d171e7ef9a39" message='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;    appName: app.name,&#10;    flowName : flow.name,&#10;    position: "Flow End",&#10;    message: "Salesforce Sync completed",&#10;    correlationId: correlationId&#10;}]'/>
+		<error-handler ref="global-error-handler" />
+		
+	</flow>
+	<sub-flow name="get-sf-job-state-sub-flow" doc:id="d04d2f76-d0bb-4755-9704-b13f1be9bf9b" >
+		<logger level="INFO" doc:name="INFO : START" doc:id="e15bbb57-46d5-444f-8b44-c4d4eb505a30" message='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;    appName: app.name,&#10;    flowName : flow.name,&#10;    position: "Flow Start",&#10;    message: "Get Job status of SF sync",&#10;    correlationId: correlationId&#10;}]'/>
+		<until-successful maxRetries="10" doc:name="Until Successful" doc:id="5f0fe5c1-e539-4fd0-8427-423ce7fef2fd" >
+			<salesforce:get-job-state-bulk-api-v2 doc:name="Get job state bulk api v 2" doc:id="cf32e662-bdf2-4e63-a671-a9b0ad94a3e7" config-ref="Salesforce_Config" id="#[payload.id]" />
+		</until-successful>
+		<choice doc:name="Check If Failed" doc:id="50dc4481-c43d-4869-b7e6-38a6260f394e">
+			<when expression='#[payload.state != "Failed"]'>
+				<until-successful maxRetries="10" doc:name="Until Successful" doc:id="47d1b289-b60b-4918-9186-164f4e3aa2d2">
+					<salesforce:get-job-state-bulk-api-v2 doc:name="Get job state bulk api v 2" doc:id="083a1e7b-a2b3-449b-bcc7-784c29dab7db" config-ref="Salesforce_Config" id="#[payload.id]" />
+					<choice doc:name="Check for Retry" doc:id="985ea259-a96d-4d3d-bb3d-57f2fbae887f">
+				<when expression='#[payload.state == "InProgress" or payload.state == "UploadComplete"]'>
+							<raise-error doc:name="CUSTOM:GETJOBSTATERETRY" doc:id="2ac7c2ed-a62b-4e56-8c6f-88e9b6c206ac" type="CUSTOM:GETJOBSTATERETRY" description="Job state is in progress or upload complete"/>
+						</when>
+						<otherwise >
+							<flow-ref doc:name="record-retrieval-sub-flow" doc:id="bc14bd15-c25e-48a1-9bdb-d74d7fe8a757" name="record-retrieval-sub-flow"/>
+						
+</otherwise>
+			</choice>
+		</until-successful>
+			</when>
+			<otherwise >
+				<raise-error doc:name="CUSTOM:SFJOBFAILED" doc:id="fe4374db-4d7b-4829-910e-790f83fdfee8" type="CUSTOM:SFJOBFAILED" description="Salesforce Job Failed"/>
+			</otherwise>
+		
+</choice>
+		<logger level="INFO" doc:name="INFO : END" doc:id="55150aa9-2b2e-46fe-ac32-a727f045c72e" message='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;    appName: app.name,&#10;    flowName : flow.name,&#10;    position: "Flow End",&#10;    message: "SF Job Complete - Status Retrieved",&#10;    correlationId: correlationId&#10;}]'/>
+	</sub-flow>
+</mule>

@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+	<error-handler name="global-error-handler" doc:id="64a57945-c62e-4192-9570-97a785443467" >
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="aa05765e-a3a5-4b59-b0bf-2e23c39c449e" type="ANYPOINT-MQ:CONNECTIVITY" >
+			<ee:transform doc:name="Anypoint MQ connectivity error" doc:id="763b2a33-5c53-4c32-b359-d70d46c5fa16" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  errorCode: error.errorType.identifier,
+  errorType: error.errorType.namespace,
+  errorMessage: error.description default "Anypoint MQ connectivity error occurred",
+  timestamp: now(),
+  correlationId: correlationId default "",
+  statusCode: 503,
+  details: {
+    exception: error.exception.class default "",
+    detailedDescription: error.detailedDescription default ""
+  }
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+		</on-error-propagate>
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="a8110490-8219-4121-9b69-294a5791c89a" type="ANYPOINT-MQ:DESTINATION_NOT_FOUND" >
+			<ee:transform doc:name="Anypoint MQ destination not found" doc:id="9798832d-31f0-4439-bf3b-b574f7d45086" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  errorCode: error.errorType.identifier,
+  errorType: error.errorType.namespace,
+  errorMessage: error.description default "Anypoint MQ destination not found",
+  timestamp: now(),
+  correlationId: correlationId default "",
+  statusCode: 404,
+  details: {
+    exception: error.exception.class default "",
+    detailedDescription: error.detailedDescription default ""
+  }
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+		</on-error-propagate>
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="7c978308-c2a8-471d-bb9d-c9cefec5d76b" type="ANYPOINT-MQ:ILLEGAL_BODY" >
+			<ee:transform doc:name="Invalid message body format" doc:id="ef7f3be2-2e20-48ba-bcad-dd91a15beaf0" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  errorCode: error.errorType.identifier,
+  errorType: error.errorType.namespace,
+  errorMessage: error.description default "Invalid message body format",
+  timestamp: now(),
+  correlationId: correlationId default "",
+  statusCode: 400,
+  details: {
+    exception: error.exception.class default "",
+    detailedDescription: error.detailedDescription default ""
+  }
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+		</on-error-propagate>
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="126006b9-88d0-4d25-83df-048f0e14b7ab" type="ANYPOINT-MQ:PUBLISHING" >
+			<ee:transform doc:name="Failed to publish message to Anypoint MQ" doc:id="fa408ce3-40ab-42da-ac73-ab4b6c38c070" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  errorCode: error.errorType.identifier,
+  errorType: error.errorType.namespace,
+  errorMessage: error.description default "Failed to publish message to Anypoint MQ",
+  timestamp: now(),
+  correlationId: correlationId default "",
+  statusCode: 500,
+  details: {
+    exception: error.exception.class default "",
+    detailedDescription: error.detailedDescription default ""
+  }
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+		</on-error-propagate>
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="e6ad37d5-528d-42f2-928d-b72a294fa4ca" type="ANYPOINT-MQ:RETRY_EXHAUSTED" >
+			<ee:transform doc:name="retry attempts exhausted" doc:id="2550abcf-839c-4f10-8a5d-6f736514ef80" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  errorCode: error.errorType.identifier,
+  errorType: error.errorType.namespace,
+  errorMessage: error.description default "Anypoint MQ retry attempts exhausted",
+  timestamp: now(),
+  correlationId: correlationId default "",
+  statusCode: 503,
+  details: {
+    exception: error.exception.class default "",
+    detailedDescription: error.detailedDescription default ""
+  }
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+		</on-error-propagate>
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="68cbb14c-8ddf-4e37-a0b2-0acb95c1e07e" type="EMAIL:CONNECTIVITY" >
+			<ee:transform doc:name="Email server connectivity error" doc:id="5d32c651-1938-401a-921a-2f55fea6876c" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  errorCode: error.errorType.identifier,
+  errorType: error.errorType.namespace,
+  errorMessage: error.description default "Email server connectivity error",
+  timestamp: now(),
+  correlationId: correlationId default "",
+  statusCode: 503,
+  details: {
+    exception: error.exception.class default "",
+    detailedDescription: error.detailedDescription default ""
+  }
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+		</on-error-propagate>
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="e5e67501-25f5-49b4-a3a7-a3a546ab9f02" type="EMAIL:RETRY_EXHAUSTED" >
+			<ee:transform doc:name="Email retry attempts exhausted" doc:id="81494941-6d89-419d-9d0c-8912567500c0" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  errorCode: error.errorType.identifier,
+  errorType: error.errorType.namespace,
+  errorMessage: error.description default "Email retry attempts exhausted",
+  timestamp: now(),
+  correlationId: correlationId default "",
+  statusCode: 503,
+  details: {
+    exception: error.exception.class default "",
+    detailedDescription: error.detailedDescription default ""
+  }
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+		</on-error-propagate>
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="c8fc1769-89c2-4d5d-a20f-32923c536f79" type="ANY" >
+			<ee:transform doc:name="An unexpected error occurred" doc:id="a0282869-b1db-4cbb-9010-17279a9e0730" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  errorCode: error.errorType.identifier,
+  errorType: error.errorType.namespace,
+  errorMessage: error.description default "An unexpected error occurred",
+  timestamp: now(),
+  correlationId: correlationId default "",
+  statusCode: 500,
+  details: {
+    exception: error.exception.class default "",
+    detailedDescription: error.detailedDescription default ""
+  }
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+		</on-error-propagate>
+	</error-handler>
+        </mule>

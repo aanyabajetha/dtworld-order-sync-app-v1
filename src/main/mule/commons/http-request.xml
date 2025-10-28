@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<sub-flow name="common-http-request-sub-flow" doc:id="c5972d1c-2402-4b5c-9853-0845b09aea0a" >
+		<logger level="INFO" doc:name="INFO : START" doc:id="4e450354-ada0-46c9-9f32-555e04c9d9f4" message='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;    appName: app.name,&#10;    flowName : flow.name,&#10;    position: "Flow Start",&#10;    message: "Routing HTTP Request",&#10;    correlationId: correlationId&#10;}]'/>
+		<until-successful maxRetries="5" doc:name="Until Successful" doc:id="ba130530-65ae-45f4-9718-bb2674f014b3" >
+			<http:request method="#[vars.httpOperation.method]" doc:name="Request" doc:id="60687748-d546-4583-b2ae-c642480b0538" config-ref="HTTP_Request_configuration" url="#[vars.httpOperation.url]">
+				<http:headers ><![CDATA[#[vars.httpOperation.headers]]]></http:headers>
+				<http:query-params ><![CDATA[#[output application/java
+---
+{
+	"x-query" : vars.query
+}]]]></http:query-params>
+			</http:request>
+		</until-successful>
+		<logger level="INFO" doc:name="INFO : END" doc:id="de52ec6b-c35f-4f62-bcf4-703bb444e2fa" message='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;    appName: app.name,&#10;    flowName : flow.name,&#10;    position: "Flow End",&#10;    message: "Routing Completed, Response Received",&#10;    correlationId: correlationId&#10;}]'/>
+	</sub-flow>
+</mule>
