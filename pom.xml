@@ -44,8 +44,7 @@
 						<environment>Sandbox</environment>
 						<target>Cloudhub-US-East-2</target>
 						<muleVersion>${app.runtime}</muleVersion>
-						<connectedAppClientId>${connectedAppClientId}</connectedAppClientId>
-						<connectedAppClientSecret>${connectedAppClientSecret}</connectedAppClientSecret>
+						
 						<applicationName>dtworld-order-sync-app-v1-sandbox</applicationName>
 						<!-- replica and vcore count -->
 						<replicas>1</replicas>
@@ -53,8 +52,8 @@
 						<deploymentSettings>
 							<http>
 								<inbound>
-									<forwardSslSession>true</forwardSslSession>
-									<lastMileSecurity>true</lastMileSecurity>
+									<!-- <forwardSslSession>true</forwardSslSession> -->
+									<!-- <lastMileSecurity>true</lastMileSecurity> -->
 								</inbound>
 							</http>
 						</deploymentSettings>
