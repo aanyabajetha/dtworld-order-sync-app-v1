@@ -61,7 +61,7 @@ jobs:
           connectedAppClientId: ${{ secrets.CONNECTED_APP_CLIENT_ID }}
           connectedAppClientSecret: ${{ secrets.CONNECTED_APP_CLIENT_SECRET }}
         run: |
-          mvn clean deploy -DskipTests \
+         mvn clean deploy -DskipTests --settings settings.xml \
             -DconnectedAppClientId=$connectedAppClientId \
             -DconnectedAppClientSecret=$connectedAppClientSecret
 
@@ -91,7 +91,7 @@ jobs:
           connectedAppClientId: ${{ secrets.CONNECTED_APP_CLIENT_ID }}
           connectedAppClientSecret: ${{ secrets.CONNECTED_APP_CLIENT_SECRET }}
         run: |
-          mvn deploy -DmuleDeploy \
+          mvn clean deploy -DskipTests --settings settings.xml \
             -DconnectedAppClientId=$connectedAppClientId \
             -DconnectedAppClientSecret=$connectedAppClientSecret \
             -Denvironment=Sandbox \
