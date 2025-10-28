@@ -47,6 +47,7 @@
 						<connectedAppClientId>${connectedAppClientId}</connectedAppClientId>
 						<connectedAppClientSecret>${connectedAppClientSecret}</connectedAppClientSecret>
 						<applicationName>dtworld-order-sync-app-v1-sandbox</applicationName>
+						<!-- replica and vcore count -->
 						<replicas>1</replicas>
 						<vCores>1</vCores>
 						<deploymentSettings>
